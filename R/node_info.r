@@ -200,7 +200,7 @@ node_info <- function(tree, min.support, alignment, metadata, ancestral) {
   # Repeat the above steps until there are no clusters with 0 sequences left
 
   issues<-data.frame(node = nodes_diff$Node, n_tips = nodes_diff$n_tips, cluster = nodes_diff$cluster)
-
+  print("202_done") 
   issues<-issues[order(issues$cluster),]
 
   issues$parent<-NA
@@ -273,7 +273,7 @@ node_info <- function(tree, min.support, alignment, metadata, ancestral) {
   }
 
   possible_names<-data.frame(names = rep(previous_assignments$assignment, 26))
-  previous_assignments$assignment<-paste(previous_assignments$assignment, "_A1", sep = "")
+  previous_assignments$assignment<-paste(previous_assignments$assignment, "_A.1", sep = "")
 
   for (i in 1:length(previous_assignments$assignment)) {
     node_data$cluster[previous_assignments$node[i]]<-previous_assignments$assignment[i]
@@ -281,29 +281,28 @@ node_info <- function(tree, min.support, alignment, metadata, ancestral) {
 
 
   if ((length(which(previous_assignments$node == 1))) == 0) {
-    node_data$cluster[1]<-"A1"
+    node_data$cluster[1]<-"A.1"
   }
 
   node_data<-node_data[order(node_data$overlaps, decreasing = T), ]
   node_data$test <- NA
-  problem_names<-data.frame(letters = c("A1", "B1", "C1", "D1", "E1", "F1", "G1", "H1", "I1", "J1", "K1", "L1", "M1", "N1",
-                                        "O1", "P1", "Q1", "R1", "S1", "T1", "U1", "V1", "W1", "X1", "Y1", "Z1", "AA1", "AB1",
-                                        "AC1", "AD1", "AE1", "AF1", "AG1", "AH1", "AI1", "AJ1", "AK1", "AL1", "AM1", "AN1",
-                                        "AP1", "AQ1", "AR1", "AS1", "AT1", "AU1", "AV1", "AW1", "AX1", "AY1", "AZ1"))
+  problem_names<-data.frame(letters = c("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N",
+                                        "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z","AA","AB","AC","AD","AE","AF","AG"
+                                        ,"AH","AI","AJ","AK","AL","AM","AN","AO","AP","AQ","AR","AS","AT","AU"))
   possible_names<-possible_names[order(possible_names$names),]
   possible_names<-paste(possible_names, problem_names$letters, sep = "_")
 
   issues<-which(node_data$Node %notin% ips::descendants(tree, node_data$Node[1], type = "all", ignore.tip = T))
-  x<-1
+  x<-2
   y<-1
   numbers<-1
   while (length(issues)>y) {
     issues<-issues[-c(1)]
-    node_data$cluster[issues[1]]<-paste(node_data$previous[issues[1]], "_", problem_names$letters[x], sep = "")
-    numbers<-c(numbers, issues[1])
+    node_data$cluster[issues[y]]<-paste(node_data$previous[issues[y]], "_", problem_names$letters[x],".1", sep = "")
+    numbers<-c(numbers, issues[y])
     nodes<-ips::descendants(tree, node_data$Node[1], type = "all", ignore.tip = T)
     for (i in 2:length(numbers)){
-      nodes<-c(nodes, ips::descendants(tree, node_data$Node[i], type = "all", ignore.tip = T))
+      nodes<-c(nodes, ips::descendants(tree, node_data$Node[numbers[i]], type = "all", ignore.tip = T))
     }
     issues<-which(node_data$Node %notin% nodes)
     y<-y+1
@@ -314,6 +313,7 @@ node_info <- function(tree, min.support, alignment, metadata, ancestral) {
       x<-x+1
     }
   }
+  
 
   fix<-grep(",", node_data$cluster)
   while (length(fix) != 0) {
@@ -326,42 +326,10 @@ node_info <- function(tree, min.support, alignment, metadata, ancestral) {
   for (i in 1:length(node_data$Node)) {
     test<-which(node_data$Node %in% ips::descendants(tree, node_data$Node[i], type = "all", ignore.tip = T))
     node_data$test[c(test)] <- paste(node_data$cluster[i], ".1", sep = "")
-    node_data$test<-stringr::str_replace(node_data$test, "A1\\..\\..\\..", "B1")
-    node_data$test<-stringr::str_replace(node_data$test, "B1\\..\\..\\..", "C1")
-    node_data$test<-stringr::str_replace(node_data$test, "C1\\..\\..\\..", "D1")
-    node_data$test<-stringr::str_replace(node_data$test, "D1\\..\\..\\..", "E1")
-    node_data$test<-stringr::str_replace(node_data$test, "E1\\..\\..\\..", "F1")
-    node_data$test<-stringr::str_replace(node_data$test, "F1\\..\\..\\..", "G1")
-    node_data$test<-stringr::str_replace(node_data$test, "G1\\..\\..\\..", "H1")
-    node_data$test<-stringr::str_replace(node_data$test, "H1\\..\\..\\..", "I1")
-    node_data$test<-stringr::str_replace(node_data$test, "I1\\..\\..\\..", "J1")
-    node_data$test<-stringr::str_replace(node_data$test, "J1\\..\\..\\..", "K1")
-    node_data$test<-stringr::str_replace(node_data$test, "K1\\..\\..\\..", "L1")
-    node_data$test<-stringr::str_replace(node_data$test, "L1\\..\\..\\..", "M1")
-    node_data$test<-stringr::str_replace(node_data$test, "M1\\..\\..\\..", "N1")
-    node_data$test<-stringr::str_replace(node_data$test, "N1\\..\\..\\..", "O1")
-    node_data$test<-stringr::str_replace(node_data$test, "O1\\..\\..\\..", "P1")
-    node_data$test<-stringr::str_replace(node_data$test, "P1\\..\\..\\..", "Q1")
-    node_data$test<-stringr::str_replace(node_data$test, "Q1\\..\\..\\..", "R1")
-    node_data$test<-stringr::str_replace(node_data$test, "R1\\..\\..\\..", "S1")
-    node_data$test<-stringr::str_replace(node_data$test, "S1\\..\\..\\..", "T1")
-
-
+  
     majors<-which(grepl("_", node_data$test))
     node_data$cluster[c(majors)] <- node_data$test[c(majors)]
 
-    for (k in 1:length(possible_names)) {
-      if (length(which(node_data$cluster == possible_names[k]))>1) {
-        problems<-which(node_data$cluster == possible_names[k])
-        problems<-problems[-c(1)]
-        y=1
-        for (a in 1:length(problems)) {
-          letter<-which(problem_names$letters == (stringr::str_split(node_data$cluster[problems[a]], "_")[[1]][2]))
-          node_data$cluster[problems[a]]<-paste((stringr::str_split(node_data$cluster[problems[a]], "_")[[1]][1]), problem_names$letters[(letter+y)], sep = "_")
-          y = y+1
-        }
-      }
-    }
     duplicates<-unique(node_data$cluster[duplicated(node_data$cluster)])
     problems<-duplicates[which(stringr::str_count(duplicates, pattern = "\\.") == 0)]
     duplicates<-duplicates[which(stringr::str_count(duplicates, pattern = "\\.") != 0)]
@@ -376,6 +344,38 @@ node_info <- function(tree, min.support, alignment, metadata, ancestral) {
         x<-(x+1)
         node_data$cluster[test[j]]<-paste(c(name), collapse='.' )
       }
+    }
+  }
+  max=0
+  duplicates_title<-NA
+  duplicates_title<-duplicates_title[-c(1)]
+  for (m in 1:length(node_data$Node)) {
+    if(stringr::str_count(node_data$cluster[m],"\\.")>3){#如果點大於3 需要新的字母來取代
+      problem_title<-substr(stringr::str_split(node_data$cluster[m],"\\_")[[1]][2],1,7) #需要取代的ex:"A.1.1.1".1.1
+      for(n in 1:length(node_data$Node)){
+        if(substr(stringr::str_split(node_data$cluster[n],"\\_")[[1]][2],1,7)==problem_title&&stringr::str_count(node_data$cluster[n],"\\.")>3){
+          duplicates_title<-c(duplicates_title,c(n))#那些共同都有A.1.1.1
+        }
+        
+        
+        if(is.na(substr(stringr::str_split(node_data$cluster[n],"\\_")[[1]][2],1,1))==0){#判斷cluster不是數值，找下一個可用字母
+          used_letter<-substr(stringr::str_split(node_data$cluster[n],"\\_")[[1]][2],1,1)
+          if(max>25){
+            used_letter<-substr(stringr::str_split(node_data$cluster[n],"\\_")[[1]][2],1,2)#表示已經用到AA了
+          }
+          used_letter<-which(problem_names$letters==used_letter)
+          if(used_letter>max&&length(used_letter)!=0){
+            max=used_letter
+          }
+        }
+      }
+      
+      
+      for (a in 1:length(duplicates_title)) {#需要取代的全部取代成新的字母
+        node_data$cluster[duplicates_title[a]]<-gsub(problem_title,problem_names$letters[max+1],node_data$cluster[duplicates_title[a]])
+      }
+      duplicates_title<-NA
+      duplicates_title<-duplicates_title[-c(1)]
     }
   }
 
@@ -384,40 +384,7 @@ node_info <- function(tree, min.support, alignment, metadata, ancestral) {
   for (i in 1:length(node_data$Node)) {
     test<-which(node_data$Node %in% ips::descendants(tree, node_data$Node[i], type = "all", ignore.tip = T))
     node_data$test[c(test)] <- paste(node_data$cluster[i], ".1", sep = "")
-    node_data$test<-stringr::str_replace(node_data$test, "A1\\..\\..\\..", "B1")
-    node_data$test<-stringr::str_replace(node_data$test, "B1\\..\\..\\..", "C1")
-    node_data$test<-stringr::str_replace(node_data$test, "C1\\..\\..\\..", "D1")
-    node_data$test<-stringr::str_replace(node_data$test, "D1\\..\\..\\..", "E1")
-    node_data$test<-stringr::str_replace(node_data$test, "E1\\..\\..\\..", "F1")
-    node_data$test<-stringr::str_replace(node_data$test, "F1\\..\\..\\..", "G1")
-    node_data$test<-stringr::str_replace(node_data$test, "G1\\..\\..\\..", "H1")
-    node_data$test<-stringr::str_replace(node_data$test, "H1\\..\\..\\..", "I1")
-    node_data$test<-stringr::str_replace(node_data$test, "I1\\..\\..\\..", "J1")
-    node_data$test<-stringr::str_replace(node_data$test, "J1\\..\\..\\..", "K1")
-    node_data$test<-stringr::str_replace(node_data$test, "K1\\..\\..\\..", "L1")
-    node_data$test<-stringr::str_replace(node_data$test, "L1\\..\\..\\..", "M1")
-    node_data$test<-stringr::str_replace(node_data$test, "M1\\..\\..\\..", "N1")
-    node_data$test<-stringr::str_replace(node_data$test, "N1\\..\\..\\..", "O1")
-    node_data$test<-stringr::str_replace(node_data$test, "O1\\..\\..\\..", "P1")
-    node_data$test<-stringr::str_replace(node_data$test, "P1\\..\\..\\..", "Q1")
-    node_data$test<-stringr::str_replace(node_data$test, "Q1\\..\\..\\..", "R1")
-    node_data$test<-stringr::str_replace(node_data$test, "R1\\..\\..\\..", "S1")
-    node_data$test<-stringr::str_replace(node_data$test, "S1\\..\\..\\..", "T1")
-
     node_data$cluster[unclassified]<-node_data$test[unclassified]
-
-    for (v in 1:length(problem_names$letters)) {
-      if (length(which(node_data$cluster == problem_names$letters[v]))>1) {
-        problems<-which(node_data$cluster == problem_names$letters[v])
-        problems<-problems[-c(1)]
-        y=1
-        for (f in 1:length(problems)) {
-          letter<-which(problem_names$letters == (node_data$cluster[problems[f]]))
-          node_data$cluster[problems[f]]<-problem_names$letters[(letter+y)]
-          y = y+1
-        }
-      }
-    }
     duplicates<-unique(node_data$cluster[duplicated(node_data$cluster)])
     problems<-duplicates[which(stringr::str_count(duplicates, pattern = "\\.") == 0)]
     duplicates<-duplicates[which(stringr::str_count(duplicates, pattern = "\\.") != 0)]
@@ -433,37 +400,42 @@ node_info <- function(tree, min.support, alignment, metadata, ancestral) {
         node_data$cluster[test[j]]<-paste(c(name), collapse='.' )
       }
     }
-    fix<-which(node_data$cluster %in% 1:1000)
-    while (length(fix) != 0) {
-      letter<-problem_names$letters[(length(which(problem_names$letters %in% node_data$cluster))+1)]
-      node_data$cluster<-gsub(fix, letter, node_data$cluster)
-      fix<-which(node_data$cluster %in% 1:1000)
-    }
-    fix<-grep("NA", node_data$cluster)
-    fix<-c(fix, which(is.na(node_data$cluster)))
-    while (length(fix) != 0) {
-      letter<-problem_names$letters[(length(which(problem_names$letters %in% node_data$cluster))+1)]
-      node_data$cluster<-gsub("NA", letter, node_data$cluster)
-      node_data$cluster[which(is.na(node_data$cluster))]<-letter
-      fix<-grep("NA", node_data$cluster)
-      fix<-c(fix, which(is.na(node_data$cluster)))
-    }
+  }
 
-    duplicates<-unique(node_data$cluster[duplicated(node_data$cluster)])
-    x<-2
-    while (length(duplicates) != 0 && !is.na(duplicates)) {
-      for (i in 1:length(duplicates)) {
-        test<-which(node_data$cluster == duplicates[i])
-        test<-test[-c(1)]
-        for (j in 1:length(test)) {
-          name<-unlist(stringr::str_split(node_data$cluster[test[j]], "_"))
-          node_data$cluster[test[j]]<-paste(name[1], problem_names$letters[x], sep = "_")
-          x<-(x+1)
+  max=0
+  duplicates_title<-NA
+  duplicates_title<-duplicates_title[-c(1)]
+  for (m in 1:length(node_data$Node)) {
+    if(stringr::str_count(node_data$cluster[m],"\\.")>3){
+      problem_title <- substr(node_data$cluster[m], 1, 7)
+      
+      for(n in 1:length(node_data$Node)){
+        if(substr(node_data$cluster[n], 1, 7)==problem_title&&stringr::str_count(node_data$cluster[n],"\\.")>3){
+          duplicates_title<-c(duplicates_title,c(n))
+        }
+        node_data$cluster[3] %in% node_data$cluster[unclassified]
+        
+        if(is.na(substr(node_data$cluster[n],1,1))==0&&node_data$cluster[n] %in% node_data$cluster[unclassified]){
+          used_letter<-substr(node_data$cluster[n],1,1)
+          if(max>25){
+            used_letter<-substr(node_data$cluster[n],1,2)
+          }
+          used_letter<-which(problem_names$letters==used_letter)
+          if(used_letter>max&&length(used_letter)!=0){
+            max=used_letter  
+          }
         }
       }
-      duplicates<-unique(node_data$cluster[duplicated(node_data$cluster)])
+      
+      
+      for (a in 1:length(duplicates_title)) {
+        node_data$cluster[duplicates_title[a]]<-gsub(problem_title,problem_names$letters[max+1],node_data$cluster[duplicates_title[a]])
+      }
+      duplicates_title<-NA
+      duplicates_title<-duplicates_title[-c(1)]
     }
   }
+  
   node_data<-node_data[, -c((grep("test", names(node_data))), grep("previous", names(node_data)))]
   for (i in 1:length(node_data$cluster)) {
     sequence_data$cluster[which(sequence_data$cluster == i)] <- node_data$cluster[i]
@@ -486,6 +458,8 @@ node_info <- function(tree, min.support, alignment, metadata, ancestral) {
   if(length(grep("NA", node_data$lineage) != 0)){
     node_data<-node_data[-c(grep("NA", node_data$lineage)),]
   }
+  
+  print("node_info_done")
 
   return(node_data)
 }
