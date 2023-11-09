@@ -293,7 +293,7 @@ node_info <- function(tree, min.support, alignment, metadata, ancestral) {
   possible_names<-paste(possible_names, problem_names$letters, sep = "_")
 
   issues<-which(node_data$Node %notin% ips::descendants(tree, node_data$Node[1], type = "all", ignore.tip = T))
-  x<-2
+  x<-1
   y<-1
   numbers<-1
   while (length(issues)>y) {
