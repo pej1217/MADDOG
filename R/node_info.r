@@ -293,7 +293,7 @@ node_info <- function(tree, min.support, alignment, metadata, ancestral) {
   possible_names<-paste(possible_names, problem_names$letters, sep = "_")
 
   issues<-which(node_data$Node %notin% ips::descendants(tree, node_data$Node[1], type = "all", ignore.tip = T))
-  x<-1
+  x<-2
   y<-1
   numbers<-1
   while (length(issues)>y) {
@@ -346,34 +346,29 @@ node_info <- function(tree, min.support, alignment, metadata, ancestral) {
       }
     }
   }
-  max=0
+
   duplicates_title<-NA
   duplicates_title<-duplicates_title[-c(1)]
-  for (m in 1:length(node_data$Node)) {
-    if(stringr::str_count(node_data$cluster[m],"\\.")>3){#¦pªGÂI¤j©ó3 »İ­n·sªº¦r¥À¨Ó¨ú¥N
-      problem_title<-substr(stringr::str_split(node_data$cluster[m],"\\_")[[1]][2],1,7) #»İ­n¨ú¥Nªºex:"A.1.1.1".1.1
+  for (k in 1:length(previous_assignments$assignment)){
+    previous_assignments$assignment[k]<-stringr::str_split(previous_assignments$assignment[k],"\\_")[[1]][1]
+  }
+  previous_assignments$used_letter<-1
+  for (m in 1:length(node_data$Node)){
+    if(stringr::str_count(node_data$cluster[m],"\\.")>3){#å¦‚æœé»å¤§æ–¼3 éœ€è¦æ–°çš„å­—æ¯ä¾†å–ä»£
+      #problem_cluster<-node_data$cluster[m]
+      problem_title<-substr(stringr::str_split(node_data$cluster[m],"\\_")[[1]][2],1,7) #éœ€è¦å–ä»£çš„ex:"A.1.1.1".1.1
+      problem_clade<-node_data$previous[m]
       for(n in 1:length(node_data$Node)){
-        if(substr(stringr::str_split(node_data$cluster[n],"\\_")[[1]][2],1,7)==problem_title&&stringr::str_count(node_data$cluster[n],"\\.")>3){
-          duplicates_title<-c(duplicates_title,c(n))#¨º¨Ç¦@¦P³£¦³A.1.1.1
+        if(substr(stringr::str_split(node_data$cluster[n],"\\_")[[1]][2],1,7)==problem_title&&stringr::str_count(node_data$cluster[n],"\\.")>3&&node_data$previous[n]==problem_clade){
+          duplicates_title<-c(duplicates_title,c(n))#é‚£äº›å…±åŒéƒ½æœ‰C4_A.1.1.1
         }
-        
-        
-        if(is.na(substr(stringr::str_split(node_data$cluster[n],"\\_")[[1]][2],1,1))==0){#§PÂ_cluster¤£¬O¼Æ­È¡A§ä¤U¤@­Ó¥i¥Î¦r¥À
-          used_letter<-substr(stringr::str_split(node_data$cluster[n],"\\_")[[1]][2],1,1)
-          if(max>25){
-            used_letter<-substr(stringr::str_split(node_data$cluster[n],"\\_")[[1]][2],1,2)#ªí¥Ü¤w¸g¥Î¨ìAA¤F
-          }
-          used_letter<-which(problem_names$letters==used_letter)
-          if(used_letter>max&&length(used_letter)!=0){
-            max=used_letter
-          }
-        }
+        index<-which(previous_assignments$assignment==problem_clade)
       }
-      
-      
-      for (a in 1:length(duplicates_title)) {#»İ­n¨ú¥Nªº¥ş³¡¨ú¥N¦¨·sªº¦r¥À
-        node_data$cluster[duplicates_title[a]]<-gsub(problem_title,problem_names$letters[max+1],node_data$cluster[duplicates_title[a]])
+          
+      for (a in 1:length(duplicates_title)) {
+        node_data$cluster[duplicates_title[a]]<-gsub(problem_title,problem_names$letters[previous_assignments$used_letter[index]+1],node_data$cluster[duplicates_title[a]])
       }
+      previous_assignments$used_letter[index]<-previous_assignments$used_letter[index]+1
       duplicates_title<-NA
       duplicates_title<-duplicates_title[-c(1)]
     }

@@ -323,10 +323,12 @@ seq_designation <- function(tree, min.support, alignment, metadata, ancestral) {
   }
   
   
+#³Ð«Ø¥Xtest ¸òcluster¤@¼Ëªº´N·|¶K¹L¥h µM«á§ï¦¨­^¤å©R¦W
   for (i in 1:length(node_data$Node)) {
     test<-which(node_data$Node %in% ips::descendants(tree, node_data$Node[i], type = "all", ignore.tip = T))
     node_data$test[c(test)] <- paste(node_data$cluster[i], ".1", sep = "")
     
+  #§âtest¶K¹L¥h
     majors<-which(grepl("_", node_data$test))
     node_data$cluster[c(majors)] <- node_data$test[c(majors)]
     
@@ -349,38 +351,32 @@ seq_designation <- function(tree, min.support, alignment, metadata, ancestral) {
     }
   }
   
-  max=0
   duplicates_title<-NA
   duplicates_title<-duplicates_title[-c(1)]
-    for (m in 1:length(node_data$Node)) {
-      if(stringr::str_count(node_data$cluster[m],"\\.")>3){#If "." greater than 3, a new letter should be used to replace it.
-        problem_title<-substr(stringr::str_split(node_data$cluster[m],"\\_")[[1]][2],1,7) #need to replace ex:"A.1.1.1".1.1
-        for(n in 1:length(node_data$Node)){
-          if(substr(stringr::str_split(node_data$cluster[n],"\\_")[[1]][2],1,7)==problem_title&&stringr::str_count(node_data$cluster[n],"\\.")>3){
-            duplicates_title<-c(duplicates_title,c(n))#which all have A.1.1.1
-          }
-          
-          
-          if(is.na(substr(stringr::str_split(node_data$cluster[n],"\\_")[[1]][2],1,1))==0){#If the cluster is not a numerical value, look for the next available letter.
-            used_letter<-substr(stringr::str_split(node_data$cluster[n],"\\_")[[1]][2],1,1)
-            if(max>25){
-              used_letter<-substr(stringr::str_split(node_data$cluster[n],"\\_")[[1]][2],1,2)#AA has already been used
-            }
-            used_letter<-which(problem_names$letters==used_letter)
-            if(used_letter>max&&length(used_letter)!=0){
-              max=used_letter
-            }
-          }
+  for (k in 1:length(previous_assignments$assignment)){
+    previous_assignments$assignment[k]<-stringr::str_split(previous_assignments$assignment[k],"\\_")[[1]][1]
+  }
+  previous_assignments$used_letter<-1
+  for (m in 1:length(node_data$Node)){
+    if(stringr::str_count(node_data$cluster[m],"\\.")>3){#如果點大於3 需要新的字母來取代
+      #problem_cluster<-node_data$cluster[m]
+      problem_title<-substr(stringr::str_split(node_data$cluster[m],"\\_")[[1]][2],1,7) #需要取代的ex:"A.1.1.1".1.1
+      problem_clade<-node_data$previous[m]
+      for(n in 1:length(node_data$Node)){
+        if(substr(stringr::str_split(node_data$cluster[n],"\\_")[[1]][2],1,7)==problem_title&&stringr::str_count(node_data$cluster[n],"\\.")>3&&node_data$previous[n]==problem_clade){
+          duplicates_title<-c(duplicates_title,c(n))#那些共同都有C4_A.1.1.1
         }
-       
-        
-        for (a in 1:length(duplicates_title)) {#Replace all that need replacement with new letters
-          node_data$cluster[duplicates_title[a]]<-gsub(problem_title,problem_names$letters[max+1],node_data$cluster[duplicates_title[a]])
-        }
-        duplicates_title<-NA
-        duplicates_title<-duplicates_title[-c(1)]
+        index<-which(previous_assignments$assignment==problem_clade)
       }
+          
+      for (a in 1:length(duplicates_title)) {
+        node_data$cluster[duplicates_title[a]]<-gsub(problem_title,problem_names$letters[previous_assignments$used_letter[index]+1],node_data$cluster[duplicates_title[a]])
+      }
+      previous_assignments$used_letter[index]<-previous_assignments$used_letter[index]+1
+      duplicates_title<-NA
+      duplicates_title<-duplicates_title[-c(1)]
     }
+  }
 
 
   unclassified<-which(!grepl("_", node_data$cluster))
