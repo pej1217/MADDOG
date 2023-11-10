@@ -55,8 +55,9 @@ sunburst <- function(lineage_info, node_data, tree, metadata, sequence_data) {
     lineages$subclade[i]<-strsplit(lineages$lineage[i], "_")[[1]][1]
   }
 
-  letters <- c("A1", "B1", "C1", "D1", "E1", "F1", "G1", "H1", "I1", "J1", "K1", "L1", "M1", "N1",
-               "O1", "P1", "Q1", "R1", "S1", "T1", "U1", "V1", "W1", "X1", "Y1", "Z1")
+  letters <- c("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N",
+               "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z","AA","AB","AC","AD","AE","AF","AG"
+               ,"AH","AI","AJ","AK","AL","AM","AN","AO","AP","AQ","AR","AS","AT","AU")
 
   if(length(grep("_", lineage_info$lineage)) != 0) {
     if (length(which(lineages$subclade %in% letters)) != 0) {
