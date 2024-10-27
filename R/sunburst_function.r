@@ -22,11 +22,17 @@ sunburst <- function(lineage_info, node_data, tree, metadata, sequence_data) {
   for (i in 1:length(previous$assignment)) {
     previous$n_seqs[i]<-length(which(metadata$alignment.name == previous$assignment[i]))
   }
-  node_data<-node_data[order(node_data$lineage),]
-
+  node_data<-node_data[order(node_data$node),]
+  
+  lineage_info$node<-NA
+  for (i in 1:length(lineage_info$node)) {
+    lineage_info$node[i]<-node_data$node[which(node_data$lineage == lineage_info$lineage[i])]
+  }
+  lineage_info<-lineage_info[order(lineage_info$node),]
+  
   node_data$parent<-NA
   node_data$parent[1]<-""
-
+  
 
   for (i in 2:length(node_data$node)) {
     if (length(which(node_data$node %in% treeio::ancestor(tree, node_data$node[i]))) == 0) {
@@ -57,7 +63,11 @@ sunburst <- function(lineage_info, node_data, tree, metadata, sequence_data) {
 
   letters <- c("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N",
                "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z","AA","AB","AC","AD","AE","AF","AG"
-               ,"AH","AI","AJ","AK","AL","AM","AN","AO","AP","AQ","AR","AS","AT","AU")
+               ,"AH","AI","AJ","AK","AL","AM","AN","AO","AP","AQ","AR","AS","AT","AU","AV","AW","AX","AY","AZ",
+               "BA","BB","BC","BD","BE","BF","BG","BH","BI","BJ","BK","BL","BM","BN","BO","BP","BQ","BR","BS","BT"
+               ,"BU","BV", "BW", "BX", "BY", "BZ","CA", "CB", "CC", "CD", "CE", "CF", "CG", "CH", "CI", "CJ", "CK", "CL", "CM", "CN",
+               "CO", "CP", "CQ", "CR", "CS", "CT", "CU", "CV", "CW", "CX", "CY", "CZ","DA", "DB", "DC", "DD", "DE", "DF", "DG", "DH", "DI", "DJ", "DK", "DL", "DM", "DN",
+               "DO", "DP", "DQ", "DR", "DS", "DT", "DU", "DV", "DW", "DX", "DY", "DZ")
 
   if(length(grep("_", lineage_info$lineage)) != 0) {
     if (length(which(lineages$subclade %in% letters)) != 0) {
@@ -76,7 +86,7 @@ sunburst <- function(lineage_info, node_data, tree, metadata, sequence_data) {
   pal<-colorRampPalette(c(cols))
   pal<-rev(pal(length(lineage)))
   lineage_info$colour[-c(grep("_", lineage_info$lineage))]<-pal
-
+  
   for (i in 1:length(clades)) {
     lineage<-grep(clades[i], lineage_info$lineage)
     cols<-RColorBrewer::brewer.pal(3, Colours[i])
@@ -84,6 +94,9 @@ sunburst <- function(lineage_info, node_data, tree, metadata, sequence_data) {
     pal<-rev(pal(length(lineage)))
     lineage_info$colour[(grep(clades[i], lineage_info$lineage))]<-pal
   }
+  
+  write.csv(lineage_info, file = "sunbrust2_lineage_info.csv", row.names=F)
+  
 
   new<-plotly::plot_ly(
     labels = c(lineage_info$lineage),
@@ -92,7 +105,8 @@ sunburst <- function(lineage_info, node_data, tree, metadata, sequence_data) {
     type = "sunburst",
     marker = list(colors = (lineage_info$colour))
   )
-
+  htmlwidgets::saveWidget(plotly::as_widget(new),"sunburst.html")
+  
   return(new)
 }
 

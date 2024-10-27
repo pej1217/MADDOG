@@ -40,6 +40,5 @@ lineage_info<-function(sequence_data, metadata) {
                                   dplyr::group_by(country) %>%
                                   dplyr::summarise()))
   }
-
   return(clusters)
 }

@@ -1,3 +1,8 @@
+tree <- read.tree(file = "iqtree7980/clade_7980.fasta.contree")
+metadata <- read.csv(file="iqtree7980/clade_7980.csv")
+sequence_data <- read.csv(file="iqtree7980/clade_7980_replace.csv")
+lineage_info <- read.csv(file="iqtree7980/clade_7980_lineage_info_replace.csv")
+node_data <- read.csv(file="iqtree7980/clade_7980_node_data_replace.csv")
 lineage_info_parent <- function(lineage_info, node_data, tree, metadata, sequence_data) {
   tree$tip.label <- gsub("\\..*", "", tree$tip.label, perl = T)
   tree$node.comment<- gsub(".*=", "", tree$node.label, perl = T)
@@ -27,5 +32,6 @@ lineage_info_parent <- function(lineage_info, node_data, tree, metadata, sequenc
     lineage_info$parent[i]<-node_data$parent[which(node_data$lineage == lineage_info$lineage[i])]
 
   }
+  write.csv(lineage_info,file="iqtree7980/clade_7980_lineage_info_parents.csv")
   return(lineage_info)
 }
