@@ -169,8 +169,8 @@ seq_designation <- function(tree, min.support, alignment, metadata, ancestral) {
   }
   # Count the number of sequences assigned to each lineage
 
-  if(length(which(summary$count < 2))<0){
-    nodes_diff <- nodes_diff[-c(which(nodes_diff$cluster %in% summary$cluster[(which(summary$count < 2))])),]
+  if(length(which(summary$count < 0))<0){
+    nodes_diff <- nodes_diff[-c(which(nodes_diff$cluster %in% summary$cluster[(which(summary$count < 0))])),]
   }
   # If any lineages have no sequences in them, remove them as an option from the nodes_diff table
 
@@ -200,7 +200,6 @@ seq_designation <- function(tree, min.support, alignment, metadata, ancestral) {
   # Repeat the above steps until there are no clusters with 0 sequences left
 
   issues<-data.frame(node = nodes_diff$Node, n_tips = nodes_diff$n_tips, cluster = nodes_diff$cluster)
-
   issues<-issues[order(issues$cluster),]
 
   issues$parent<-NA
@@ -231,7 +230,6 @@ seq_designation <- function(tree, min.support, alignment, metadata, ancestral) {
   for (i in 1:(length(nodes_diff$Node))) {
     lineage_assignments[which(lineage_assignments[,1] %in% caper::clade.members(nodes_diff[i,1], tree, include.nodes = F, tip.labels = T)), 2] <- nodes_diff[i,5]
   }
-
   nodes_diff$numbers<-1:length(nodes_diff$Node)
 
   for (i in 1:length(nodes_diff$Node)) {
@@ -258,6 +256,8 @@ seq_designation <- function(tree, min.support, alignment, metadata, ancestral) {
 
   node_data$previous<-NA
 
+  #收集每個節點的後代的 "previous" 值
+  
   for (i in 1:length(node_data$Node)) {
     clades<-unique(sequence_data$previous[
       which(sequence_data$ID %in% tree$tip.label[c(unlist(
@@ -267,17 +267,18 @@ seq_designation <- function(tree, min.support, alignment, metadata, ancestral) {
       paste(c(clades), collapse = ", ")
 
   }
-
   for (i in 1:length(previous_assignments$assignment)) {
     previous_assignments$node[i]<-which(node_data$previous == previous_assignments$assignment[i])[1]
     previous_assignments$assignment[i]<-previous_assignments$assignment[i]
   }
 
-  possible_names<-data.frame(names = rep(previous_assignments$assignment, 47))
-  previous_assignments$assignment<-paste(previous_assignments$assignment, "_A.1", sep = "")
+  possible_names<-data.frame(names = rep(previous_assignments$assignment, 26))
 
+  previous_assignments$used_letter<-1
   for (i in 1:length(previous_assignments$assignment)) {
-    node_data$cluster[previous_assignments$node[i]]<-previous_assignments$assignment[i]
+    node_data$cluster[previous_assignments$node[i]]<-paste(previous_assignments$assignment[i], "_A.1", sep="")
+    z<-which(node_data$previous[previous_assignments$node[i]]==previous_assignments$assignment)
+    previous_assignments$used_letter[z]<-previous_assignments$used_letter[z]+1
   }
 
 
@@ -289,17 +290,28 @@ seq_designation <- function(tree, min.support, alignment, metadata, ancestral) {
   node_data$test <- NA
   problem_names<-data.frame(letters = c("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N",
                                         "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z","AA","AB","AC","AD","AE","AF","AG"
-                                        ,"AH","AI","AJ","AK","AL","AM","AN","AO","AP","AQ","AR","AS","AT","AU"))
+                                        ,"AH","AI","AJ","AK","AL","AM","AN","AO","AP","AQ","AR","AS","AT","AU","AV","AW","AX","AY","AZ",
+                                        "BA","BB","BC","BD","BE","BF","BG","BH","BI","BJ","BK","BL","BM","BN","BO","BP","BQ","BR","BS","BT"
+                                        ,"BU","BV", "BW", "BX", "BY", "BZ","CA", "CB", "CC", "CD", "CE", "CF", "CG", "CH", "CI", "CJ", "CK", "CL", "CM", "CN",
+                                        "CO", "CP", "CQ", "CR", "CS", "CT", "CU", "CV", "CW", "CX", "CY", "CZ","DA", "DB", "DC", "DD", "DE", "DF", "DG", "DH", "DI", "DJ", "DK", "DL", "DM", "DN",
+                                        "DO", "DP", "DQ", "DR", "DS", "DT", "DU", "DV", "DW", "DX", "DY", "DZ"))
   possible_names<-possible_names[order(possible_names$names),]
   possible_names<-paste(possible_names, problem_names$letters, sep = "_")
-  #issuesªí¥Ü¤£¦bnode1ªº«á¥N¸Ì­±
+  #issues表示不在node1的後代裡面
   issues<-which(node_data$Node %notin% ips::descendants(tree, node_data$Node[1], type = "all", ignore.tip = T))
-  x<-1
-  y<-1
+  y<-2
   numbers<-1
-  while (length(issues)>y) {
-    issues<-issues[-c(1)]
-    node_data$cluster[issues[y]]<-paste(node_data$previous[issues[y]], "_", problem_names$letters[x],".1", sep = "")
+  
+  
+  while (length(issues)>y-1) {
+    x<-which(node_data$previous[issues[y]] == previous_assignments$assignment)
+    if (length(x)==0 ){
+      node_data$cluster[issues[y]]<-paste(node_data$previous[issues[y]], "_", problem_names$letters[1],".1", sep = "")
+    }
+    if (length(x)!=0 ){
+      node_data$cluster[issues[y]]<-paste(node_data$previous[issues[y]], "_", problem_names$letters[previous_assignments$used_letter[x]],".1", sep = "")
+      previous_assignments$used_letter[x]<-previous_assignments$used_letter[x]+1
+    }
     numbers<-c(numbers, issues[y])
     nodes<-ips::descendants(tree, node_data$Node[1], type = "all", ignore.tip = T)
     for (i in 2:length(numbers)){
@@ -308,28 +320,24 @@ seq_designation <- function(tree, min.support, alignment, metadata, ancestral) {
     issues<-which(node_data$Node %notin% nodes)
     y<-y+1
     
-    if (length(grep(problem_names$letters[2], node_data$cluster)) == 0) {
-      x<-1
-    } else {
-      x<-x+1
-    }
+  }
+  unclassified_letter<-1
+  fix<-grep(",", node_data$cluster)
+  for ( i in 1:length(fix)) {
+    node_data$cluster[fix[i]]<-paste(problem_names$letters[i], ".1", sep="")
+    unclassified_letter<-unclassified_letter+1
   }
 
-  fix<-grep(",", node_data$cluster)
-  while (length(fix) != 0) {
-    letter<-problem_names$letters[(length(which(problem_names$letters %in% node_data$cluster))+1)]
-    node_data$cluster<-gsub(node_data$cluster[fix], letter, node_data$cluster)
-    fix<-grep(",", node_data$cluster)
-  }
+#創建出test 跟cluster一樣的就會貼過去 然後改成英文命名
+  #依序找每個node的後代 如果是i的後代 將test填上i的名稱.1 如此迭代 後代的後代就是i.1.1
   
-  
-#³Ð«Ø¥Xtest ¸òcluster¤@¼Ëªº´N·|¶K¹L¥h µM«á§ï¦¨­^¤å©R¦W
   for (i in 1:length(node_data$Node)) {
     test<-which(node_data$Node %in% ips::descendants(tree, node_data$Node[i], type = "all", ignore.tip = T))
     node_data$test[c(test)] <- paste(node_data$cluster[i], ".1", sep = "")
     
-  #§âtest¶K¹L¥h
+  #把test貼過去
     majors<-which(grepl("_", node_data$test))
+    #majors<-which(grepl("[[:alpha:]]", node_data$test))
     node_data$cluster[c(majors)] <- node_data$test[c(majors)]
     
   
@@ -350,45 +358,25 @@ seq_designation <- function(tree, min.support, alignment, metadata, ancestral) {
       }
     }
   }
+
+#剩下cluster沒有跟test一樣的 就會把test的值貼過去cluster
+  unclassified<-which(!grepl("\\.", node_data$cluster))
+  #unclassified<-unclassified[c(-1)]
   
-  duplicates_title<-NA
-  duplicates_title<-duplicates_title[-c(1)]
-  for (k in 1:length(previous_assignments$assignment)){
-    previous_assignments$assignment[k]<-stringr::str_split(previous_assignments$assignment[k],"\\_")[[1]][1]
-  }
-  previous_assignments$used_letter<-1
-  for (m in 1:length(node_data$Node)){
-    if(stringr::str_count(node_data$cluster[m],"\\.")>3){#如果點大於3 需要新的字母來取代
-      #problem_cluster<-node_data$cluster[m]
-      problem_title<-substr(stringr::str_split(node_data$cluster[m],"\\_")[[1]][2],1,7) #需要取代的ex:"A.1.1.1".1.1
-      problem_clade<-node_data$previous[m]
-      for(n in 1:length(node_data$Node)){
-        if(substr(stringr::str_split(node_data$cluster[n],"\\_")[[1]][2],1,7)==problem_title&&stringr::str_count(node_data$cluster[n],"\\.")>3&&node_data$previous[n]==problem_clade){
-          duplicates_title<-c(duplicates_title,c(n))#那些共同都有C4_A.1.1.1
-        }
-        index<-which(previous_assignments$assignment==problem_clade)
-      }
-          
-      for (a in 1:length(duplicates_title)) {
-        node_data$cluster[duplicates_title[a]]<-gsub(problem_title,problem_names$letters[previous_assignments$used_letter[index]+1],node_data$cluster[duplicates_title[a]])
-      }
-      previous_assignments$used_letter[index]<-previous_assignments$used_letter[index]+1
-      duplicates_title<-NA
-      duplicates_title<-duplicates_title[-c(1)]
-    }
-  }
-
-
-  unclassified<-which(!grepl("_", node_data$cluster))
-  unclassified<-unclassified[c(-1)]
   for (i in 1:length(node_data$Node)) {
+    #Node[i]的後代們會寫入test
     test<-which(node_data$Node %in% ips::descendants(tree, node_data$Node[i], type = "all", ignore.tip = T))
+    #後代就給.1
     node_data$test[c(test)] <- paste(node_data$cluster[i], ".1", sep = "")
+    
+    
+    #未分類的test貼過去cluster
     node_data$cluster[unclassified]<-node_data$test[unclassified]
+    
     duplicates<-unique(node_data$cluster[duplicated(node_data$cluster)])
     problems<-duplicates[which(stringr::str_count(duplicates, pattern = "\\.") == 0)]
     duplicates<-duplicates[which(stringr::str_count(duplicates, pattern = "\\.") != 0)]
-
+#如果值有duplicate的就會重新命名 依序+1 ex:A.1>A.2>A.3
     for (i in 1:length(duplicates)) {
       test<-which(node_data$cluster == duplicates[i])
       test<-test[-c(1)]
@@ -405,56 +393,53 @@ seq_designation <- function(tree, min.support, alignment, metadata, ancestral) {
   max=0
   duplicates_title<-NA
   duplicates_title<-duplicates_title[-c(1)]
+
   for (m in 1:length(node_data$Node)) {
-    if(stringr::str_count(node_data$cluster[m],"\\.")>3){
-      problem_title <- substr(node_data$cluster[m], 1, 7)
+    if(stringr::str_count(node_data$cluster[m],"\\_")>0&&stringr::str_count(node_data$cluster[m],"\\.")>3){#如果點大於3 需要新的字母來取代#C4_A.1.1.1的例子
+      problem_title<-substr(stringr::str_split(node_data$cluster[m],"\\_")[[1]][2],1,7) #需要取代的ex:"A.1.1.1".1.1.1.1.1.1
+      problem_clade<-node_data$previous[m]
       
       for(n in 1:length(node_data$Node)){
-        if(substr(node_data$cluster[n], 1, 7)==problem_title&&stringr::str_count(node_data$cluster[n],"\\.")>3){
-          duplicates_title<-c(duplicates_title,c(n))
+        if(substr(stringr::str_split(node_data$cluster[n],"\\_")[[1]][2],1,7)==problem_title&&stringr::str_count(node_data$cluster[n],"\\.")>3&&unlist(stringr::str_split(node_data$cluster[n], "\\_"))[1]==problem_clade){
+          duplicates_title<-c(duplicates_title,c(n))#那些共同都有C4_A.1.1.1
         }
-        node_data$cluster[3] %in% node_data$cluster[unclassified]
-        
-        if(is.na(substr(node_data$cluster[n],1,1))==0&&node_data$cluster[n] %in% node_data$cluster[unclassified]){
-          used_letter<-substr(node_data$cluster[n],1,1)
-          if(max>25){
-            used_letter<-substr(node_data$cluster[n],1,2)
-          }
-          used_letter<-which(problem_names$letters==used_letter)
-          if(used_letter>max&&length(used_letter)!=0){
-            max=used_letter  
-          }
+        index<-which(previous_assignments$assignment==problem_clade)
+      }
+      for (a in 1:length(duplicates_title)) {#需要取代的全部取代成新的字母
+        node_data$cluster[duplicates_title[a]]<-gsub(problem_title,problem_names$letters[previous_assignments$used_letter[index]],node_data$cluster[duplicates_title[a]])
+      }
+      previous_assignments$used_letter[index]<-previous_assignments$used_letter[index]+1
+      duplicates_title<-NA
+      duplicates_title<-duplicates_title[-c(1)]
+    }
+    
+    if(stringr::str_count(node_data$cluster[m],"\\_")<1 &&stringr::str_count(node_data$cluster[m],"\\.")>3){#沒有錢綴的情況
+      problem_title <- substr(node_data$cluster[m], 1, 7)
+      for(n in 1:length(node_data$Node)){
+        if(!is.na(node_data$cluster[n]) &&substr(node_data$cluster[n], 1, 7)==problem_title&&stringr::str_count(node_data$cluster[n],"\\.")>3){
+          duplicates_title<-c(duplicates_title,c(n))#那些共同都有A.1.1.1
         }
+        index<-unclassified_letter
       }
-      
-      
-      for (a in 1:length(duplicates_title)) {
-        node_data$cluster[duplicates_title[a]]<-gsub(problem_title,problem_names$letters[max+1],node_data$cluster[duplicates_title[a]])
+      for (b in 1:length(duplicates_title)) {#需要取代的全部取代成新的字母
+        node_data$cluster[duplicates_title[b]]<-gsub(problem_title,problem_names$letters[unclassified_letter],node_data$cluster[duplicates_title[b]])
       }
+      unclassified_letter<-unclassified_letter+1
       duplicates_title<-NA
       duplicates_title<-duplicates_title[-c(1)]
     }
   }
-
-
+  
   node_data<-node_data[, -c((grep("test", names(node_data))), grep("previous", names(node_data)))]
   for (i in 1:length(node_data$cluster)) {
     sequence_data$cluster[which(sequence_data$cluster == i)] <- node_data$cluster[i]
   }
   sequence_data<-sequence_data[,-c(4)]
   names(sequence_data)<-c("ID", "n_N", "n_gap", "length", "year", "lineage", "previous")
-
-  #if(length(grep("-", sequence_data$lineage)) != 0){
-    #clade<-strsplit(sequence_data$lineage[grep("-", sequence_data$lineage)][1], "-")[[1]][1]
-    #sequence_data$lineage[-c(grep("-", sequence_data$lineage))]<-
-      #paste(clade, sequence_data$lineage[-c(grep("-", sequence_data$lineage))])
-  #}else{
-    #if(length(grep("_", sequence_data$lineage)) != 0){
-    #clade<-strsplit(sequence_data$lineage[grep("_", sequence_data$lineage)][1], " ")[[1]][1]
-    #sequence_data$lineage[-c(grep("_", sequence_data$lineage))]<-
-      #paste(clade, sequence_data$lineage[-c(grep("_", sequence_data$lineage))])
-  #}}
-
+  
+  if(length(grep("NA", node_data$lineage) != 0)){
+    node_data<-node_data[-c(grep("NA", node_data$lineage)),]
+  }
   sequence_data$lineage[grep("NA", sequence_data$lineage)]<-NA
   return(sequence_data)
 }
