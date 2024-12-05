@@ -189,4 +189,17 @@ To view the vignette use `browseVignettes("MADDOG")`
 
 **Be aware; the assign_lineages function currently is unavailable for Windows, but the command line tool can be used instead.**
 
+---
+
+### Updates and Enhancements
+
+1. **Code Modifications**  
+   - Modified the file `R/seq_designation.r` and related scripts to ensure that when running `new_designation.sh` (for alternative virus designations), the lineage names are generated according to **Pangolin's naming conventions** without errors.
+
+2. **New Script Added**  
+   - Introduced a new script, `R/lineage_info_parent.r`, which generates a CSV file detailing the **parent-child relationships** among lineages. This addition helps users easily explore and reference these relationships.
+
+---
+
+
  
